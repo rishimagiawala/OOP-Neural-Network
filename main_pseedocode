@@ -1,0 +1,119 @@
+//This main file was written in pseudo code because implementing actual functionality would be time consuming, 
+//however feel free to look at the classes and interfaces which were written in typescript
+
+PROCEDURE forwardPass()
+  // HIDDEN LAYERS
+  FOR each hiddenLayers
+    FOR each hiddenLayer's neurons
+      Set weightedSum to 0
+      FOR each neuron's links
+        Multiply link's weight with associated previousLayer's neuron's value
+        Add result to weightedSum
+      END FOR
+      Call Relu(weightedSum)
+      Set neuron's value to result
+    END FOR
+  END FOR
+
+  // OUTPUT LAYER
+  FOR each outputLayer's neurons
+    Set weightedSum to 0
+    FOR each neuron's links
+      Multiply link's weight with associated previousLayer's neuron's value
+      Add result to weightedSum
+    END FOR
+    Call Relu(weightedSum)
+    Set neuron's value to result
+  END FOR
+END PROCEDURE
+
+PROCEDURE calculateTotalError()
+  Set totalError to 0
+  FOR each outputLayer's neurons
+    IF neuron EQUALS expected output neuron
+      Set neuron's expectedValue to 1
+    ELSE
+      Set neuron's expectedValue to 0
+    END IF
+    // /!\ don't forget the power of 2
+    Do (1 / 2) * (neuron's expectedValue - neuron's value)²
+    Add result to totalError
+  END FOR
+END PROCEDURE
+
+
+FUNCTION chainRuleOutput(neuron, link)
+  Do neuron's value - neuron's expectedValue
+  Set x to result
+  Call ReluDerivative(neuron's value)
+  Set y to result
+  Set z to previousLayer's linkedNeuron's value
+  Save x and y in link
+  Return x * y * z
+END FUNCTION
+
+
+FUNCTION chainRuleHidden(layer, neuron, link)
+  Set x to 0
+  FOR each nextLayer's linkedNeuron's links
+    Do linkedNeuron's link's x * linkedNeuron's link's y * linkedNeuron's link's weight
+    Add result to x
+  END FOR
+  Call ReluDerivative(nextLayer's linkedNeuron's value)
+  Set y to result
+  Set z to previousLayer's linkedNeuron's value
+  Save x and y in link
+  Return x * y * z
+END FUNCTION
+
+
+PROCEDURE updateWeights()
+  // HIDDEN LAYERS
+  FOR each hiddenLayers
+    FOR each hiddenLayer's neurons
+      FOR each neuron's links
+        Set link's weight to link's newWeight
+      END FOR
+    END FOR
+  END FOR
+
+  // OUTPUT LAYER
+  FOR each outputLayer's neurons
+    FOR each neuron's links
+      Set link's weight to link's newWeight
+    END FOR
+  END FOR
+END PROCEDURE
+
+
+PROCEDURE backpropagation()
+  Call calculateTotalError()
+  // OUTPUT LAYER
+  FOR each outputLayer's neurons
+    FOR each neuron's links
+      Call chainRuleOutput(neuron, link)
+      Set gradient to result
+      Do link's weight - (learningRate * gradient)
+      // do not overwrite link's weight (weight =/= newWeight)
+      Set link's newWeight to result
+    END FOR
+  END FOR
+
+  // HIDDEN LAYERS
+  FOR each hiddenLayers
+    FOR each hiddenLayer's neurons
+      FOR each neuron's links
+        Call chainRuleHidden(layer, neuron, link)
+        Set gradient to result
+        Do link's weight - (learningRate * gradient)
+        // do not overwrite link's weight (weight =/= newWeight)
+        Set link's newWeight to result
+      END FOR
+    END FOR
+  END FOR
+  Call updateWeights()
+END PROCEDURE
+
+
+
+
